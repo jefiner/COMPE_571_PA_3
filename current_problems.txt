@@ -1,0 +1,25 @@
+5(number of task) 1000(total time units) 
+
+
+
+task	deadline 	execution time 
+w1 	520 		53 
+w2 	220		40 
+w3 	500 		104  
+w4 	200 		57 
+w5 	300 		35 
+
+
+- have delimter of each space between every integer
+- each new value will be stored into a different array
+- when file reaches to NULL (no more new information) it will exit out of loop
+- otherwise, it will keep storing numbers into the array 
+- possibly read the columns, not as rows in program
+- 5 x 6 table
+
+	- ex:// in each line of index in array[0] represents task
+	- ex:// in each line of index in array[1] represents deadline
+	- ex:// in each line of index in array[2] represents execution time
+
+
+Current issue : fscanf will look at the 3rd value, store it in array, and print it out
