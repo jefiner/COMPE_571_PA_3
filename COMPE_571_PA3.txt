@@ -4,35 +4,59 @@
 void main()
 {
     FILE *myfile;
-    int number_of_task = 0;
-    int total_time_units = 0;
-
-    int task[number_of_task];
+    
+    int number_of_task = 5;
+    int table [6][7];
+    char str[2][5];
     int deadline[number_of_task];
     int execution_time[number_of_task];
+
+    int task;
+    int total_time_unit;
+    int total_execution_time;
     
-    char c;
     if((myfile = fopen("PA3_input1.txt", "r")) == NULL)
     {
         printf("cannot locate file\n");
     }
     else 
-    {
-        fscanf(myfile, "%d %d ", &number_of_task, &total_time_units);
-        printf("# of task: %d\n", number_of_task);
-        printf("total time units: %d\n", total_time_units);
-        printf("\n");
-        
-        
-        c = fgetc(myfile);
-        while (c != EOF)
+    {   
+        for (int j = 0; j < 7; j++)
         {
-            printf("%c", c);
-            c = fgetc(myfile);
+            fscanf(myfile, "%d", &table[0][j]);
+        }
+        task = table[0][0];
+        total_time_unit = table[0][1];
+        total_execution_time = table[0][2];
+        printf("Task: %d\n", task);
+        printf("Total Time Unit: %d\n", total_time_unit);
+        printf("total Execution time: %d\n", total_execution_time);
+
+        for (int i = 1; i < 6; i++)
+        {
+            fscanf(myfile, "%s", &str[1][i-1]);
+            for(int j = 1; j < 6; j++)
+            {
+                fscanf(myfile, "%d", &table[i][j]);
+            }
+        }        
+
+        printf("\n------------------Deadline -----------------------\n\n");
+        for (int k = 0; k < 5; k++) //deadline
+        {
+            deadline[k] = table[k+1][1];
+            printf("W%d: deadline at [%d][1] is: %d\n", (k+1), (k+1), deadline[k]);
+        }
+        printf("\n----------------Execution time--------------------\n\n");
+        for (int k = 0; k < 5; k++) //Execution time
+        {
+            execution_time[k] = table[k+1][2];
+            printf("W%d: exection time at [%d][2] is: %d\n", (k+1), (k+1), execution_time[k]);
         }
         printf("\n");
-
+        
     }
+       
     fclose(myfile);
-    //return 0;
+            
 }
