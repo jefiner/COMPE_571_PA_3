@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void main()
+{
+    FILE *myfile;
+    int number_of_task = 0;
+    int total_time_units = 0;
+
+    int task[number_of_task];
+    int deadline[number_of_task];
+    int execution_time[number_of_task];
+    
+    char c;
+    if((myfile = fopen("PA3_input1.txt", "r")) == NULL)
+    {
+        printf("cannot locate file\n");
+    }
+    else 
+    {
+        fscanf(myfile, "%d %d ", &number_of_task, &total_time_units);
+        printf("# of task: %d\n", number_of_task);
+        printf("total time units: %d\n", total_time_units);
+        printf("\n");
+        
+        
+        c = fgetc(myfile);
+        while (c != EOF)
+        {
+            printf("%c", c);
+            c = fgetc(myfile);
+        }
+        printf("\n");
+
+    }
+    fclose(myfile);
+    //return 0;
+}
