@@ -1,0 +1,379 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+void main()
+{
+    FILE *myfile;
+
+    int number_of_task = 5;
+    int table [6][7];
+    char str[2][5];
+    double deadline[number_of_task];
+    double execution_time[number_of_task];
+
+    int task;
+    int total_time_unit;
+    int total_execution_time;
+
+    if((myfile = fopen("PA3_input1.txt", "r")) == NULL)
+    {
+        printf("cannot locate file\n");
+    }
+    else 
+    {
+        for (int j = 0; j < 7; j++)
+        {
+            fscanf(myfile, "%d", &table[0][j]);
+        }
+        task = table[0][0];
+        total_time_unit = table[0][1];
+        total_execution_time = table[0][2];
+        printf("\n------------------ Current Data -----------------------\n\n");
+        printf("Task: %d\n", task);
+        printf("Total Time Unit: %d\n", total_time_unit);
+        printf("total Execution time: %d\n", total_execution_time);
+
+        for (int i = 1; i < 6; i++)
+        {
+            fscanf(myfile, "%s", &str[1][i-1]);
+
+            for(int j = 1; j < 6; j++)
+            {
+                fscanf(myfile, "%d", &table[i][j]);
+            }
+        }
+        printf("\n------------------Deadline -----------------------\n\n");
+        for (int k = 0; k < 5; k++) //deadline
+        {
+            deadline[k] = table[k+1][1];
+            printf("W%d: deadline at [%d][1] is: %f\n", (k+1), (k+1), deadline[k]);
+        }
+        printf("\n----------------Execution time--------------------\n\n");
+        for (int k = 0; k < 5; k++) //Execution time
+        {
+            execution_time[k] = table[k+1][2];
+            printf("W%d: exection time at [%d][2] is: %f\n", (k+1), (k+1), execution_time[k]);
+        }
+        printf("\n"); 
+       
+    }
+
+    fclose(myfile);
+    
+    int total_time = 1;
+    int workload1 = 1;
+    int workload2 = 1;
+    int workload3 = 1;
+    int workload4 = 1;
+    int workload5 = 1;
+    int new_execution_time;
+    int execution1 = execution_time[0];
+    int execution2 = execution_time[1];
+    int execution3 = execution_time[2];
+    int execution4 = execution_time[3];
+    int execution5 = execution_time[4];
+    int new_execution1 = execution_time[0];
+    int new_execution2 = execution_time[1];
+    int new_execution3 = execution_time[2];
+    int new_execution4 = execution_time[3];
+    int new_execution5 = execution_time[4];
+    int deadline1 = deadline[0];
+    int deadline2 = deadline[1];
+    int deadline3 = deadline[2];
+    int deadline4 = deadline[3];
+    int deadline5 = deadline[4];
+    int next_deadline1 = deadline[0];
+    int next_deadline2 = deadline[1];
+    int next_deadline3 = deadline[2];
+    int next_deadline4 = deadline[3];
+    int next_deadline5 = deadline[4];
+   
+    double summation = 0.0;
+    
+    for (int i = 0; i < 5; ++i)
+    {
+        summation += (execution_time[i])/(deadline[i]);
+        //printf("Current summation for %d: %f\n", i, summation);
+    }
+
+    double num_task = (number_of_task);
+    //double num_pow = pow(double(2), double((1)/(number_of_task));
+    double hi = pow(2.0, (1.0/number_of_task));
+    double results = (num_task * (hi - 1));
+
+    if(summation > results)
+    {
+        printf("An RM schedule is NOT feasible for this input\n");
+        printf("The Summation is: %f\n", summation);
+        printf("Right hand side is: %f\n\n", results);
+        exit(1);
+    }
+    else
+    {   
+        printf("An RM schedule is feasible for this input\n");
+        printf("The Summation is: %f\n", summation);
+        printf("Right hand side is: %f\n\n", results);
+    
+
+        while (total_time < total_time_unit) 
+        {
+            if (workload1 <= total_time) { //if start time is less than 1000
+                if ((next_deadline1 <= next_deadline2) && (next_deadline1 <= next_deadline3) && (next_deadline1 <= next_deadline4) && (next_deadline1 <= next_deadline5)) //if w1 has earliest deadline
+                { 
+                    new_execution_time = new_execution1;
+                    printf("%d w1 1188 %d\n", total_time, new_execution_time);
+                    total_time += new_execution_time;
+                    new_execution1 = execution1;
+                    workload1 += deadline1; //cant start until after deadline
+                    next_deadline1 = deadline1; //next deadline
+                }
+                else if (((workload2 > total_time) || (next_deadline1 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline1 <= next_deadline3)) && ((workload4 > total_time) || (next_deadline1 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline1 <= next_deadline5))) {
+                    if (((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline1)) {
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload3 <= workload2) || (workload2 <= total_time)) &&((workload3 <= workload4) || (workload4 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline1)) {//(  {
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload2) || (workload2 <= total_time))  && ((workload4 <= workload3) || (workload3 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline1)) {//(((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 < next_deadline1)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if (((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline1)) { //((workload5 > total_time) && (next_deadline5 < next_deadline1)) { //
+                        new_execution_time = workload5 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution1) {
+                        new_execution_time = new_execution1;
+                        printf("%d w1 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution1 = execution1;
+                        workload1 += deadline1; //cant start until after deadline
+                        next_deadline1 = deadline1; //next deadline
+                    }
+                    else {
+                        printf("%d w1 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time;
+                        new_execution1 = new_execution1 - new_execution_time;
+                    }
+                    
+                }
+                
+            }
+            if (workload2 <= total_time) 
+            {
+                if ((next_deadline2 <= next_deadline1) && (next_deadline2 <= next_deadline3) && (next_deadline2 <= next_deadline4) && (next_deadline2 <= next_deadline5)) 
+                {
+                    new_execution_time = new_execution2;
+                    printf("%d w2 1188 %d\n", total_time, new_execution_time);
+                    total_time += new_execution_time;
+                    new_execution2 = execution2;
+                    workload2 += deadline2;
+                    next_deadline2 = deadline2;
+                }
+                else if (((workload1 > total_time) || (next_deadline2 <= next_deadline1)) && ((workload3 > total_time) || (next_deadline2 <= next_deadline3)) && ((workload4 > total_time) || (next_deadline2 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline2 <= next_deadline5))) 
+                {
+                    if (((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline2)) 
+                    {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload4) || (workload4 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline2)) 
+                    {
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload3) || (workload3 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline2)) 
+                    {
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if ( ((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline2))
+                    {
+                        new_execution_time = workload5 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution2) 
+                    {
+                        new_execution_time = new_execution2;
+                        printf("%d w2 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution2 = execution2;
+                        workload2 += deadline2;
+                        next_deadline2 = deadline2;
+                    }
+                    else 
+                    {
+                        printf("%d w2 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time;
+                        new_execution2 = new_execution2 - new_execution_time;
+                    }
+                    
+                }
+            }
+            if (workload3 <= total_time) 
+            {
+                if ((next_deadline3 <= next_deadline1) && (next_deadline3 <= next_deadline2) && (next_deadline3 <= next_deadline4) && (next_deadline3 <= next_deadline5)) {
+                    new_execution_time = new_execution3;
+                    printf("%d w3 1188 %d\n", total_time, new_execution_time);
+                    total_time += new_execution_time;
+                    new_execution3 = execution3;
+                    workload3 += deadline3;
+                    next_deadline3 = deadline3;
+                }
+                else if (((workload1 > total_time) || (next_deadline3 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline3 <= next_deadline2)) && ((workload4 > total_time) || (next_deadline3 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline3 <= next_deadline5))) {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline3)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline3)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload2) || (workload2 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline3)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if ( ((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline3)) {//
+                        new_execution_time = workload5 - total_time;
+                    }
+                    if (new_execution_time >= new_execution3) {
+                        new_execution_time = new_execution3;
+                        printf("%d w3 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution3 = execution3;
+                        workload3 += deadline3;
+                        next_deadline3 = deadline3;
+                    }
+                    else {
+                        printf("%d w3 1188 %d\n", total_time, new_execution_time);
+                    total_time += new_execution_time;
+                        new_execution3 = new_execution3 - new_execution_time;
+                    }
+                    
+                    
+                }
+                
+            }
+            if (workload4 <= total_time) 
+            {
+                if ((next_deadline4 <= next_deadline1) && (next_deadline4 <= next_deadline2) && (next_deadline4 <= next_deadline3) && (next_deadline4 <= next_deadline5)) {
+                    new_execution_time = new_execution4;
+                    printf("%d w4 1188 %d\n", total_time, new_execution_time);
+                    total_time += new_execution_time;
+                    new_execution4 = execution4;
+                    workload4 += deadline4;
+                    next_deadline4 = deadline4;
+                }
+                else if (((workload1 > total_time) || (next_deadline4 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline4 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline4 <= next_deadline3)) && ((workload5 > total_time) || (next_deadline4 <= next_deadline5))) {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline4)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline4)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload2) || (workload2 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline4)) {//
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) &&  (workload5 > total_time) && (next_deadline5 <= next_deadline4)) {//
+                        new_execution_time = workload5 - total_time;
+                    }
+
+                    //printf("new_execution_time: %d", new_execution_time);
+                    //printf("new_execution4: %d", new_execution4);
+                    
+                    if (new_execution_time >= new_execution4) {
+                        new_execution_time = new_execution4;
+                        printf("%d w4 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution4 = execution4;
+                    workload4 += deadline4;
+                        next_deadline4 = deadline4;
+                    }
+                    else {
+                        //printf("I am w4");
+                        printf("%d w4 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time;
+                        new_execution4 = new_execution4 - new_execution_time;
+                    }
+                    
+                }
+            }
+            if (workload5 <= total_time) 
+            {
+                /*printf("next_deadline5: %d", next_deadline5);
+                printf("next_deadline4: %d", next_deadline4);
+                printf("next_deadline3: %d", next_deadline3);
+                printf("next_deadline2: %d", next_deadline2);
+                printf("next_deadline1: %d", next_deadline1);*/
+
+                if ((next_deadline5 < next_deadline1) && (next_deadline5 < next_deadline2) && (next_deadline5 < next_deadline4) && (next_deadline5 < next_deadline3))
+                {
+                    new_execution_time = new_execution5; 
+                    printf("%d w5 1188 %d\n", total_time, new_execution_time);
+                    total_time += new_execution_time;
+                    new_execution5 = execution5;
+                    workload5 += deadline5;
+                    next_deadline5 = deadline5;
+                }
+                else if (((workload1 > total_time) || (next_deadline5 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline5 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline5 <= next_deadline3)) && ((workload5 > total_time) || (next_deadline5 <= next_deadline4)))
+                {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline5)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline5)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if ( ((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload2) || (workload2 <= total_time)) &&((workload3 <= workload4) || (workload4 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline5)) {//
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload2) || (workload2 <= total_time)) && ((workload4 <= workload3) || (workload3 <= total_time)) &&  (workload4 > total_time) && (next_deadline4 <= next_deadline5)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    
+                // printf("new_execution_time: %d", new_execution_time);
+                // printf("new_execution5: %d", new_execution5);
+                    
+                    if (new_execution_time >= new_execution5)
+                    {
+                        new_execution_time = new_execution5;
+                        printf("%d w5 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution5 = execution5;
+                        workload5 += deadline5;
+                        next_deadline5 = deadline5;
+                    }
+                    else 
+                    {
+                        printf("%d w5 1188 %d\n", total_time, new_execution_time);
+                        total_time += new_execution_time;
+                        new_execution5 = new_execution5 - new_execution_time;
+                    }
+                }
+            }
+
+            else if((workload1 > total_time) && (workload2 > total_time) && (workload3 > total_time) && (workload4 > total_time))
+            {
+                //printf("%d IDLE %d\n", total_time, new_execution_time);
+                
+                if((workload1 <= workload2) && (workload1 < workload3) && (workload1 < workload4) && (workload1 < workload5))
+                {
+                    new_execution_time = workload1 - total_time;
+                }
+                else if ((workload2 <= workload3) && (workload2 <= workload4) && (workload2 <= workload5))
+                {
+                    new_execution_time = workload2 - total_time;
+                }
+                else if ((workload3 <= workload4) && (workload3 <= workload5))
+                {
+                    new_execution_time = workload3 - total_time;
+                }
+                else if (workload4 <= workload5)
+                {
+                    new_execution_time = workload4 - total_time;
+                }
+                else 
+                {
+                    new_execution_time = workload5 - total_time;
+                    //printf("flag 1\n");
+                }
+                printf("%d IDLE %d\n", total_time, new_execution_time);
+                total_time += new_execution_time;
+            }
+        }
+    
+    }
+}
