@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void main()
+{
+    FILE *myfile;
+    
+    int number_of_task = 5;
+    int table [6][7];
+    char str[2][5];
+    int deadline[number_of_task];
+    int execution_time[number_of_task];
+
+    int task;
+    int total_time_unit;
+    int total_execution_time;
+    
+    int total_time = 1;
+    int start_W1 = 1;
+    int start_W2 = 1;
+    int start_W3 = 1;
+    int start_W4 = 1;
+    int start_W5 = 1;
+
+    if((myfile = fopen("PA3_input1.txt", "r")) == NULL)
+    {
+        printf("cannot locate file\n");
+    }
+    else 
+    {   
+        for (int j = 0; j < 7; j++)
+        {
+            fscanf(myfile, "%d", &table[0][j]);
+        }
+        task = table[0][0];
+        total_time_unit = table[0][1];
+        total_execution_time = table[0][2];
+        printf("\n------------------ Current Data -----------------------\n\n");
+        printf("Task: %d\n", task);
+        printf("Total Time Unit: %d\n", total_time_unit);
+        printf("total Execution time: %d\n", total_execution_time);
+
+        for (int i = 1; i < 6; i++)
+        {
+            fscanf(myfile, "%s", &str[1][i-1]);
+            
+            for(int j = 1; j < 6; j++)
+            {
+                fscanf(myfile, "%d", &table[i][j]);
+            }
+        }        
+        printf("\n------------------Deadline -----------------------\n\n");
+        for (int k = 0; k < 5; k++) //deadline
+        {
+            deadline[k] = table[k+1][1];
+            printf("W%d: deadline at [%d][1] is: %d\n", (k+1), (k+1), deadline[k]);
+        }
+        printf("\n----------------Execution time--------------------\n\n");
+        for (int k = 0; k < 5; k++) //Execution time
+        {
+            execution_time[k] = table[k+1][2];
+            printf("W%d: exection time at [%d][2] is: %d\n", (k+1), (k+1), execution_time[k]);
+        }
+        printf("\n");
+    }
+
+    while (total_time <= total_time_unit)
+    {
+      if(start_W1 <= total_time)
+      {
+        if ((deadline[0] < deadline[1]) && (deadline[0] < deadline[2]) && (deadline[0] < deadline[3]) && (deadline[0] < deadline[4])) //W1 with earliest deadline
+        {
+            printf("%d W1 1188 %d", total_time, execution_time[0]);
+            total_time += execution_time[0];
+            start_W1 = deadline[0];
+            deadline[0] += deadline[0];
+        }
+      }
+
+      if(start_W2 <= total_time)
+      {
+        if ((deadline[1] <deadline[0]) && (deadline[1] < deadline[2]) && (deadline[0] < deadline[3]) && (deadline[0] < deadline[4])) //W2 with eariliest deadline
+        {
+            printf("%d W2 1188 %d", total_time, execution_time[1]);
+            total_time += execution_time[1];
+            start_W2 = deadline[1];
+            deadline[1] += deadline[1];
+        }
+      }
+
+      if(start_W3 <= total_time)
+      {
+        if ((deadline[2] <deadline[0]) && (deadline[2] < deadline[1]) && (deadline[2] < deadline[3]) && (deadline[2] < deadline[4])) //W3 with eariliest deadline
+        {
+            printf("%d W3 1188 %d", total_time, execution_time[2]);
+            total_time += execution_time[2];
+            start_W3 = deadline[2];
+            deadline[2] += deadline[2];
+        }
+      }
+
+      if(start_W4 <= total_time)
+      {
+        if ((deadline[3] <deadline[0]) && (deadline[3] < deadline[2]) && (deadline[3] < deadline[2]) && (deadline[3] < deadline[4])) //W4 with eariliest deadline
+        {
+            printf("%d W4 1188 %d", total_time, execution_time[3]);
+            total_time += execution_time[3];
+            start_W4 = deadline[3];
+            deadline[3] += deadline[3];
+        }
+      }
+
+      if(start_W5 <= total_time)
+      {
+        if ((deadline[4] <deadline[0]) && (deadline[4] < deadline[2]) && (deadline[4] < deadline[3]) && (deadline[4] < deadline[1])) //W5 with eariliest deadline
+        {
+            printf("%d W5 1188 %d", total_time, execution_time[4]);
+            total_time += execution_time[4];
+            start_W5 = deadline[4];
+            deadline[4] += deadline[4];
+        }
+      }
+    }
+
+
+    fclose(myfile);
+            
+}
