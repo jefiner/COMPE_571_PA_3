@@ -98,20 +98,20 @@ void main()
             printf("W%d: exection time at [%d][6] is: %f\n", (k+1), (k+1), WCET_384[k]);
         }
         printf("\n"); 
-        for(int k = 0; k < 4; k++)
+        for(int k = 0; k < 4; k++) //Wl
         {
             w1_task[k] = table[1][k+2];
             //printf("Task W1_Task is: %f\n", w1_task[k]);
         }
         //printf("-------------------------------------------------------------\n");
-        for (int k = 0; k < 4; k++)
+        for (int k = 0; k < 4; k++) //W2
         {
             w2_task[k] = table[2][k+2];
             //printf("Task W2_task is %f\n", w2_task[k]);
         }
         //printf("-------------------------------------------------------------\n");
 
-        for(int k = 0; k < 4; k++)
+        for(int k = 0; k < 4; k++) //W3
         {
             w3_task[k] = table[3][k+2];
            // printf("Task W3_task is %f\n", w3_task[k]);
@@ -119,14 +119,14 @@ void main()
         }
        // printf("-------------------------------------------------------------\n");
 
-        for (int k = 0; k < 4; k++)
+        for (int k = 0; k < 4; k++) //W4
         {
             w4_task[k] = table[4][k+2];
             //printf("Task W4_task is %f\n", w4_task[k]);
         }
         //printf("-------------------------------------------------------------\n");
 
-        for(int k = 0; k < 4; k++)
+        for(int k = 0; k < 4; k++) //W5
         {
             w5_task[k] = table[5][k+2];
             //printf("Task W5_task is %f\n", w5_task[k]);
@@ -136,9 +136,10 @@ void main()
     }
     double val1, val2, val3, val4, val5 = 0; 
     double task1, task2, task3, task4, task5 = 0;
-    double freq1, freq2, freq3, freq4 = 0;
+    double freq1, freq2, freq3, freq4, freq5 = 0;
     double greatest = 0.0;
     double total = 0.0;
+    int frequency[4] = {1188, 918, 648, 384};
     for (int w1 = 0; w1 < 4; w1++)
     {
         val1 = (w1_task[w1]/deadline[0]);
@@ -163,7 +164,14 @@ void main()
                             task2 = w2_task[w2];
                             task3 = w3_task[w3];
                             task4 = w4_task[w4];
-                            task5 = w5_task[w5];                            
+                            task5 = w5_task[w5]; 
+
+                            freq1 = frequency[w1];
+                            freq2 = frequency[w2];
+                            freq3 = frequency[w3];
+                            freq4 = frequency[w4];
+                            freq5 = frequency[w5];
+
                         }
                     }
                 }
@@ -177,6 +185,13 @@ void main()
     printf("Task 4: %f\n", task4);
     printf("Task 5: %f\n\n", task5);
 
+    printf("Correct frequency: %f\n", freq1);
+    printf("Correct frequency: %f\n", freq2);
+    printf("Correct frequency: %f\n", freq3);
+    printf("Correct frequency: %f\n", freq4);
+    printf("Correct frequency: %f\n", freq5);
+    printf("\n\n");
+    
 
     fclose(myfile);
     

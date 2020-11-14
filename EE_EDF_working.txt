@@ -1,0 +1,1060 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+
+void main(int argc, char* argv[])
+{
+    FILE *myfile;
+
+    int number_of_task = 5;
+    int number_of_task_1 = 6;
+    int table [6][7];
+    char str[2][5];
+    double deadline[number_of_task];
+    double WCET_1188[number_of_task];
+    double WCET_918[number_of_task];
+    double WCET_648[number_of_task];
+    double WCET_384[number_of_task];
+    
+    char mode[3];
+    char command[100];
+    char file_path[10];
+    char mode_EE[2];
+
+    double w1_task[number_of_task_1];
+    double w2_task[number_of_task_1];
+    double w3_task[number_of_task_1];
+    double w4_task[number_of_task_1];
+    double w5_task[number_of_task_1];
+
+    int task;
+    int total_time_unit;
+    int active_CPU_power_1188;
+    int active_CPU_power_918;
+    int active_CPU_power_648;
+    int active_CPU_power_384;
+    int idle_power;
+
+    snprintf(command, sizeof(command), "./PA3.o %s %s %s", file_path, mode, mode_EE);
+    
+    if((myfile = fopen(argv[1], "r")) == NULL)
+    {
+        printf("cannot locate file\n");
+    }
+    else 
+    {
+        for (int j = 0; j < 7; j++)
+        {
+            fscanf(myfile, "%d", &table[0][j]);
+        }
+        task = table[0][0];
+        total_time_unit = table[0][1];
+        active_CPU_power_1188 = table[0][2];
+        active_CPU_power_918 = table[0][3];
+        active_CPU_power_648 = table[0][4];
+        active_CPU_power_384 = table[0][5];
+        idle_power = table[0][6];
+        for (int i = 1; i < 6; i++)
+        {
+            fscanf(myfile, "%s", &str[1][i-1]);
+
+            for(int j = 1; j < 6; j++)
+            {
+                fscanf(myfile, "%d", &table[i][j]);
+            }
+        }
+        for (int k = 0; k < 5; k++) //deadline
+        {
+            deadline[k] = table[k+1][1];
+        }
+        for (int k = 0; k < 5; k++) //Execution time
+        {
+            WCET_1188[k] = table[k+1][2];
+        }
+        for (int k = 0; k < 5; k++)
+        {
+            WCET_918[k] = table[k+1][3];
+        }
+        for(int k = 0; k < 5; k++)
+        {
+            WCET_648[k] = table[k+1][4];
+        }
+        for(int k = 0; k < 5; k++)
+        {
+            WCET_384[k] = table[k+1][5];
+        }
+        for(int k = 0; k < 4; k++)
+        {
+            w1_task[k] = table[1][k+2];
+        }
+        for (int k = 0; k < 4; k++)
+        {
+            w2_task[k] = table[2][k+2];
+        }
+        for(int k = 0; k < 4; k++)
+        {
+            w3_task[k] = table[3][k+2];
+        }
+        for (int k = 0; k < 4; k++)
+        {
+            w4_task[k] = table[4][k+2];
+        }
+        for(int k = 0; k < 4; k++)
+        {
+            w5_task[k] = table[5][k+2];
+        }
+        
+
+    }
+    
+    fclose(myfile);
+    
+    int total_time = 1;
+    int workload1 = 1;
+    int workload2 = 1;
+    int workload3 = 1;
+    int workload4 = 1;
+    int workload5 = 1;
+    int new_execution_time;
+    int execution1 = WCET_1188[0];
+    int execution2 = WCET_1188[1];
+    int execution3 = WCET_1188[2];
+    int execution4 = WCET_1188[3];
+    int execution5 = WCET_1188[4];
+    int new_execution1 = WCET_1188[0];
+    int new_execution2 = WCET_1188[1];
+    int new_execution3 = WCET_1188[2];
+    int new_execution4 = WCET_1188[3];
+    int new_execution5 = WCET_1188[4];
+    int deadline1 = deadline[0];
+    int deadline2 = deadline[1];
+    int deadline3 = deadline[2];
+    int deadline4 = deadline[3];
+    int deadline5 = deadline[4];
+    int next_deadline1 = deadline[0];
+    int next_deadline2 = deadline[1];
+    int next_deadline3 = deadline[2];
+    int next_deadline4 = deadline[3];
+    int next_deadline5 = deadline[4];
+    double active_CPU_power1 = active_CPU_power_1188;
+    double active_CPU_power2 = active_CPU_power_1188;
+    double active_CPU_power3 = active_CPU_power_1188;
+    double active_CPU_power4 = active_CPU_power_1188;
+    double active_CPU_power5 = active_CPU_power_1188;
+    double energy1 = 0.0;
+    double energy2 = 0.0;
+    double energy3 = 0.0;
+    double energy4 = 0.0;
+    double energy5 = 0.0;
+    double energy6 = 0.0;
+    int freq1, freq2, freq3, freq4, freq5 = 1188;
+    int frequency[4] = {1188, 918, 648, 384};
+    int active_power[4] = {active_CPU_power_1188, active_CPU_power_918, active_CPU_power_648, active_CPU_power_384};
+    double total_energy = 0.0;
+    double total_IDLE = 0.0;
+   
+
+    if (strcmp(argv[2], "EDF") == 0) {
+        printf("EDF was chosen\n");
+        if (strcmp(argv[3], "EE") == 0) {
+            printf("EE was chosen\n");
+            double val1, val2, val3, val4, val5 = 0; 
+            double greatest = 0.0;
+            double total = 0.0;
+            for (int w1 = 0; w1 < 4; w1++)
+            {
+                val1 = (w1_task[w1]/deadline[0]);
+                for(int w2 = 0; w2 < 4; w2++)
+                {
+                    val2 = (w2_task[w2]/deadline[1]);
+                    for (int w3 = 0; w3 < 4; w3++)
+                    {
+                        val3 = (w3_task[w3]/deadline[2]);
+                        for (int w4 = 0; w4 < 4; w4++)
+                        {
+                            val4 = (w4_task[w4]/deadline[3]);
+                            for (int w5 = 0; w5 < 4; w5++)
+                            {
+                                val5 = (w5_task[w5]/deadline[4]);
+                                total = val1 + val2 + val3 + val4 + val5;
+                                if ((total < 1) && (total > greatest))
+                                {
+                                    greatest = total;
+                                    execution1 = w1_task[w1];
+                                    execution2 = w2_task[w2];
+                                    execution3 = w3_task[w3];
+                                    execution4 = w4_task[w4];
+                                    execution5 = w5_task[w5];
+                                    new_execution1 = w1_task[w1];
+                                    new_execution2 = w2_task[w2];
+                                    new_execution3 = w3_task[w3];
+                                    new_execution4 = w4_task[w4];
+                                    new_execution5 = w5_task[w5];
+
+                                    freq1 = frequency[w1];
+                                    freq2 = frequency[w2];
+                                    freq3 = frequency[w3];
+                                    freq4 = frequency[w4];
+                                    freq5 = frequency[w5];
+
+                                    active_CPU_power1 = active_power[w1];
+                                    active_CPU_power2 = active_power[w2];
+                                    active_CPU_power3 = active_power[w3];
+                                    active_CPU_power4 = active_power[w4];
+                                    active_CPU_power5 = active_power[w5];
+
+                                                      
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+
+            printf ("Greatest value: %f\n\n", greatest);
+            printf("Task 1: %d\n", execution1);
+            printf("Task 2: %d\n", execution2);
+            printf("Task 3: %d\n", execution3);
+            printf("Task 4: %d\n", execution4);
+            printf("Task 5: %d\n\n", execution5);
+
+            printf("Correct frequency: %d\n", freq1);
+            printf("Correct frequency: %d\n", freq2);
+            printf("Correct frequency: %d\n", freq3);
+            printf("Correct frequency: %d\n", freq4);
+            printf("Correct frequency: %d\n", freq5);
+            printf("\n");
+
+        }
+        else if (strcmp(argv[3],"NO") == 0) {
+            execution1 = WCET_1188[0];
+            execution2 = WCET_1188[1];
+            execution3 = WCET_1188[2];
+            execution4 = WCET_1188[3];
+            execution5 = WCET_1188[4];
+            new_execution1 = WCET_1188[0];
+            new_execution2 = WCET_1188[1];
+            new_execution3 = WCET_1188[2];
+            new_execution4 = WCET_1188[3];
+            new_execution5 = WCET_1188[4];
+
+            freq1 = 1188;
+            freq2 = 1188;
+            freq3 = 1188;
+            freq4 = 1188;
+            freq5 = 1188;
+
+            active_CPU_power1 = active_CPU_power_1188;
+            active_CPU_power2 = active_CPU_power_1188;
+            active_CPU_power3 = active_CPU_power_1188;
+            active_CPU_power4 = active_CPU_power_1188;
+            active_CPU_power5 = active_CPU_power_1188;
+        }
+        
+
+     double summation = 0.0;
+     int execution[5] = {execution1, execution2, execution3, execution4, execution5};
+    for (int i = 0; i < 5; ++i)
+    {
+        summation += (execution[i])/(deadline[i]);
+    }
+
+    if(summation > 1)
+    {
+        printf("An EDF schedule is NOT feasible for this input\n");
+        printf("The Summation is: %f > 1\n", summation);
+        exit(1);
+    }
+
+    else
+    {
+        printf("An EDF schedule is feasible for this input\n");
+        printf("The Summation is: %f < 1\n", summation);
+    
+        while (total_time < total_time_unit) 
+        {
+            if ((workload1 <= total_time) && (total_time < total_time_unit)) 
+            {
+                if (new_execution_time + workload1 > total_time_unit) {
+                new_execution_time = total_time_unit - total_time;
+                energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                total_time += new_execution_time;
+                total_energy += energy1;
+                }
+                else if ((next_deadline1 <= next_deadline2) && (next_deadline1 <= next_deadline3) && (next_deadline1 <= next_deadline4) && (next_deadline1 <= next_deadline5) && (total_time < total_time_unit)) //if w1 has earliest deadline
+                { 
+                    new_execution_time = new_execution1;
+                    energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                    printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                    total_time += new_execution_time;
+                    new_execution1 = execution1;
+                    workload1 += deadline1; //cant start until after deadline
+                    next_deadline1 += deadline1; //next deadline
+                    total_energy += energy1;
+                }
+                else if (((workload2 > total_time) || (next_deadline1 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline1 <= next_deadline3)) && ((workload4 > total_time) || (next_deadline1 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline1 <= next_deadline5)) && (total_time < total_time_unit)) {
+                    if (((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline1) && (total_time < total_time_unit)) {
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload3 <= workload2) || (workload2 <= total_time)) &&((workload3 <= workload4) || (workload4 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline1) && (total_time < total_time_unit)) {//(  {
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload2) || (workload2 <= total_time))  && ((workload4 <= workload3) || (workload3 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline1) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if (((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline1) && (total_time < total_time_unit)) { //
+                        new_execution_time = workload5 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution1) {
+                        new_execution_time = new_execution1;
+                        energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                        printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution1 = execution1;
+                        workload1 += deadline1; //cant start until after deadline
+                        next_deadline1 += deadline1; //next deadline
+                        total_energy += energy1;
+                    }
+                    else {
+                        energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                        printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                        total_time += new_execution_time;
+                        new_execution1 = new_execution1 - new_execution_time;
+                        total_energy += energy1;
+                    }
+                    
+                }
+                
+            }
+            if ((workload2 <= total_time) && (total_time < total_time_unit)) 
+            {
+                if (new_execution_time + total_time > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                        printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                        total_time += new_execution_time;
+                        total_energy += energy2;
+                }
+                else if ((next_deadline2 <= next_deadline1) && (next_deadline2 <= next_deadline3) && (next_deadline2 <= next_deadline4) && (next_deadline2 <= next_deadline5) && (total_time < total_time_unit)) 
+                {
+                    new_execution_time = new_execution2;
+                    energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                    printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                    total_time += new_execution_time;
+                    new_execution2 = execution2;
+                    workload2 += deadline2;
+                    next_deadline2 += deadline2;
+                    total_energy += energy2;
+                }
+                else if (((workload1 > total_time) || (next_deadline2 <= next_deadline1)) && ((workload3 > total_time) || (next_deadline2 <= next_deadline3)) && ((workload4 > total_time) || (next_deadline2 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline2 <= next_deadline5)) && (total_time < total_time_unit)) 
+                {
+                    if (((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline2) && (total_time < total_time_unit)) 
+                    {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload4) || (workload4 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline2) && (total_time < total_time_unit)) 
+                    {
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload3) || (workload3 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline2) && (total_time < total_time_unit)) 
+                    {
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if ( ((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline2) && (total_time < total_time_unit))
+                    {
+                        new_execution_time = workload5 - total_time;
+                    }
+
+                    if (new_execution_time >= new_execution2) 
+                    {
+                        new_execution_time = new_execution2;
+                        energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                        printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution2 = execution2;
+                        workload2 += deadline2;
+                        next_deadline2 += deadline2;
+                        total_energy += energy2;
+                    }
+                    else 
+                    {
+                        energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                        printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                        total_time += new_execution_time;
+                        new_execution2 = new_execution2 - new_execution_time;
+                        total_energy += energy2;
+                    }
+                    
+                }
+            }
+            if ((workload3 <= total_time) && (total_time < total_time_unit)) 
+            {
+                if (new_execution_time + workload3 > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                        printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                        total_time += new_execution_time;
+                        total_energy += energy3;
+                }
+                else if ((next_deadline3 <= next_deadline1) && (next_deadline3 <= next_deadline2) && (next_deadline3 <= next_deadline4) && (next_deadline3 <= next_deadline5) && (total_time < total_time_unit)) {
+                    new_execution_time = new_execution3;
+                    energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                    printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                    total_time += new_execution_time;
+                    new_execution3 = execution3;
+                    workload3 += deadline3;
+                    next_deadline3 += deadline3;
+                    total_energy += energy3;
+                }
+                else if (((workload1 > total_time) || (next_deadline3 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline3 <= next_deadline2)) && ((workload4 > total_time) || (next_deadline3 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline3 <= next_deadline5)) && (total_time < total_time_unit)) {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline3) && (total_time < total_time_unit)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline3) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload2) || (workload2 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline3) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if ( ((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline3) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload5 - total_time;
+                    }
+                    if (new_execution_time >= new_execution3) {
+                        new_execution_time = new_execution3;
+                        energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                        printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution3 = execution3;
+                        workload3 += deadline3;
+                        next_deadline3 += deadline3;
+                        total_energy += energy3;
+                    }
+                    else {
+                        energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                        printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                        total_time += new_execution_time;
+                        new_execution3 = new_execution3 - new_execution_time;
+                        total_energy += energy3;
+                    }
+                    
+                    
+                }
+                
+            }
+            if ((workload4 <= total_time) && (total_time < total_time_unit)) 
+            {
+                if (new_execution_time + workload4 > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                        printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                        total_time += new_execution_time;
+                        total_energy += energy4;
+                }
+                else if ((next_deadline4 <= next_deadline1) && (next_deadline4 <= next_deadline2) && (next_deadline4 <= next_deadline3) && (next_deadline4 <= next_deadline5) && (total_time < total_time_unit)) {
+                    new_execution_time = new_execution4;
+                    energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                    printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                    total_time += new_execution_time;
+                    new_execution4 = execution4;
+                    workload4 += deadline4;
+                    next_deadline4 += deadline4;
+                    total_energy += energy4;
+                }
+                else if (((workload1 > total_time) || (next_deadline4 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline4 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline4 <= next_deadline3)) && ((workload5 > total_time) || (next_deadline4 <= next_deadline5)) && (total_time < total_time_unit)) {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline4) && (total_time < total_time_unit)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline4) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload2) || (workload2 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline4) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) &&  (workload5 > total_time) && (next_deadline5 <= next_deadline4) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload5 - total_time;
+                    }
+                    if (new_execution_time >= new_execution4) {
+                        new_execution_time = new_execution4;
+                        energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                        printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution4 = execution4;
+                        workload4 += deadline4;
+                        next_deadline4 += deadline4;
+                        total_energy += energy4;
+                    }
+                    else {
+                        energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                        printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                        total_time += new_execution_time;
+                        new_execution4 = new_execution4 - new_execution_time;
+                        total_energy += energy4;
+                    }
+                    
+                }
+            }
+            if ((workload5 <= total_time) && (total_time < total_time_unit)) 
+            {
+                if (new_execution_time + total_time > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                        printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                        total_time += new_execution_time;
+                        total_energy += energy5;
+                }
+                else if ((next_deadline5 < next_deadline1) && (next_deadline5 < next_deadline2) && (next_deadline5 < next_deadline4) && (next_deadline5 < next_deadline3) && (total_time < total_time_unit))
+                {
+                    new_execution_time = new_execution5; 
+                    energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                    printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                    total_time += new_execution_time;
+                    new_execution5 = execution5;
+                    workload5 += deadline5;
+                    next_deadline5 += deadline5;
+                    total_energy += energy5;
+                }
+                else if (((workload1 > total_time) || (next_deadline5 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline5 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline5 <= next_deadline3)) && ((workload5 > total_time) || (next_deadline5 <= next_deadline4)) && (total_time < total_time_unit))
+                {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline5) && (total_time < total_time_unit)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline5) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if ( ((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload2) || (workload2 <= total_time)) &&((workload3 <= workload4) || (workload4 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline5) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload2) || (workload2 <= total_time)) && ((workload4 <= workload3) || (workload3 <= total_time)) &&  (workload4 > total_time) && (next_deadline4 <= next_deadline5) && (total_time < total_time_unit)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    if (new_execution_time >= new_execution5)
+                    {
+                        new_execution_time = new_execution5;
+                        energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                        printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution5 = execution5;
+                        workload5 += deadline5;
+                        next_deadline5 += deadline5;
+                        total_energy += energy5;
+                    }
+                    else 
+                    {
+                        energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                        printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                        total_time += new_execution_time;
+                        new_execution5 = new_execution5 - new_execution_time;
+                        total_energy += energy5;
+                    }
+                }
+            }
+
+            else if((workload1 > total_time) && (workload2 > total_time) && (workload3 > total_time) && (workload4 > total_time) && (total_time < total_time_unit))
+            {
+                
+                
+                if((workload1 <= workload2) && (workload1 < workload3) && (workload1 < workload4) && (workload1 < workload5) && (total_time < total_time_unit))
+                {
+                    new_execution_time = workload1 - total_time;
+                }
+                else if ((workload2 <= workload3) && (workload2 <= workload4) && (workload2 <= workload5) && (total_time < total_time_unit))
+                {
+                    new_execution_time = workload2 - total_time;
+                }
+                else if ((workload3 <= workload4) && (workload3 <= workload5) && (total_time < total_time_unit))
+                {
+                    new_execution_time = workload3 - total_time;
+                }
+                else if ((workload4 <= workload5) && (total_time < total_time_unit))
+                {
+                    new_execution_time = workload4 - total_time;
+                }
+                else 
+                {
+                    new_execution_time = workload5 - total_time;
+                }
+                if (new_execution_time + total_time > total_time_unit) {
+                    new_execution_time = total_time_unit - total_time;
+                    energy6 = new_execution_time * idle_power * 0.001;
+                    printf("%d IDLE %d %.3fJ\n", total_time, new_execution_time, energy6);
+                    total_time += new_execution_time;
+                    total_energy += energy6;
+                    total_IDLE += new_execution_time;
+                }
+                else {
+                energy6 = new_execution_time * idle_power * 0.001;
+                printf("%d IDLE %d %.3fJ\n", total_time, new_execution_time, energy6);
+                total_time += new_execution_time;
+                total_energy += energy6;
+                total_IDLE += new_execution_time;
+                }
+            }
+        }
+        total_IDLE = (total_IDLE / total_time) * 100.0;
+        printf("\nTotal Energy: %.3fJ\n", total_energy);
+        printf("Percentage of time spent IDE: %f%%\n", total_IDLE);
+        printf("Total System Execution Time: %d\n", total_time);
+    }
+    }
+
+    else if (strcmp(argv[2], "RM") == 0) {
+        printf("RM was chosen\n");
+    double num_task = (number_of_task);
+    double hi = pow(2.0, (1.0/number_of_task));
+    double results = (num_task * (hi - 1));
+    total_energy = 0.0;
+    total_IDLE = 0.0;
+
+    if (strcmp(argv[3], "EE") == 0) {
+            printf("EE was chosen\n");
+            double val1, val2, val3, val4, val5 = 0; 
+            double greatest = 0.0;
+            double total = 0.0;
+            for (int w1 = 0; w1 < 4; w1++)
+            {
+                val1 = (w1_task[w1]/deadline[0]);
+                for(int w2 = 0; w2 < 4; w2++)
+                {
+                    val2 = (w2_task[w2]/deadline[1]);
+                    for (int w3 = 0; w3 < 4; w3++)
+                    {
+                        val3 = (w3_task[w3]/deadline[2]);
+                        for (int w4 = 0; w4 < 4; w4++)
+                        {
+                            val4 = (w4_task[w4]/deadline[3]);
+                            for (int w5 = 0; w5 < 4; w5++)
+                            {
+                                val5 = (w5_task[w5]/deadline[4]);
+                                total = val1 + val2 + val3 + val4 + val5;
+                                if ((total < results) && (total > greatest))
+                                {
+                                    greatest = total;
+                                    execution1 = w1_task[w1];
+                                    execution2 = w2_task[w2];
+                                    execution3 = w3_task[w3];
+                                    execution4 = w4_task[w4];
+                                    execution5 = w5_task[w5];
+                                    new_execution1 = w1_task[w1];
+                                    new_execution2 = w2_task[w2];
+                                    new_execution3 = w3_task[w3];
+                                    new_execution4 = w4_task[w4];
+                                    new_execution5 = w5_task[w5];
+
+                                    freq1 = frequency[w1];
+                                    freq2 = frequency[w2];
+                                    freq3 = frequency[w3];
+                                    freq4 = frequency[w4];
+                                    freq5 = frequency[w5];
+
+                                    active_CPU_power1 = active_power[w1];
+                                    active_CPU_power2 = active_power[w2];
+                                    active_CPU_power3 = active_power[w3];
+                                    active_CPU_power4 = active_power[w4];
+                                    active_CPU_power5 = active_power[w5];
+
+                                                      
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+
+            printf ("Greatest value: %f\n\n", greatest);
+            printf("Task 1: %d\n", execution1);
+            printf("Task 2: %d\n", execution2);
+            printf("Task 3: %d\n", execution3);
+            printf("Task 4: %d\n", execution4);
+            printf("Task 5: %d\n\n", execution5);
+
+            printf("Correct frequency: %d\n", freq1);
+            printf("Correct frequency: %d\n", freq2);
+            printf("Correct frequency: %d\n", freq3);
+            printf("Correct frequency: %d\n", freq4);
+            printf("Correct frequency: %d\n", freq5);
+            printf("\n");
+
+        }
+        else if (strcmp(argv[3],"NO") == 0) {
+            execution1 = WCET_1188[0];
+            execution2 = WCET_1188[1];
+            execution3 = WCET_1188[2];
+            execution4 = WCET_1188[3];
+            execution5 = WCET_1188[4];
+            new_execution1 = WCET_1188[0];
+            new_execution2 = WCET_1188[1];
+            new_execution3 = WCET_1188[2];
+            new_execution4 = WCET_1188[3];
+            new_execution5 = WCET_1188[4];
+
+            freq1 = 1188;
+            freq2 = 1188;
+            freq3 = 1188;
+            freq4 = 1188;
+            freq5 = 1188;
+
+            active_CPU_power1 = active_CPU_power_1188;
+            active_CPU_power2 = active_CPU_power_1188;
+            active_CPU_power3 = active_CPU_power_1188;
+            active_CPU_power4 = active_CPU_power_1188;
+            active_CPU_power5 = active_CPU_power_1188;
+        }
+
+         double summation = 0.0;
+         int execution[5] = {execution1, execution2, execution3, execution4, execution5};
+        for (int i = 0; i < 5; ++i)
+    {
+        summation += (execution[i])/(deadline[i]);
+        
+    }
+
+    
+
+    if(summation > results)
+    {
+        printf("An RM schedule is NOT feasible for this input\n");
+        printf("The Summation is: %f\n", summation);
+        printf("Right hand side is: %f\n\n", results);
+        exit(1);
+    }
+    else
+    {   
+        printf("An RM schedule is feasible for this input\n");
+        printf("The Summation is: %f\n", summation);
+        printf("Right hand side is: %f\n\n", results);
+
+        while (total_time < total_time_unit) 
+        {
+            if ((workload1 <= total_time) && (total_time < total_time_unit)) 
+            {
+                 if (new_execution_time + total_time > total_time_unit) {
+                new_execution_time = total_time_unit - total_time;
+                energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                total_time += new_execution_time;
+                total_energy += energy1;
+                }
+                else if ((next_deadline1 <= next_deadline2) && (next_deadline1 <= next_deadline3) && (next_deadline1 <= next_deadline4) && (next_deadline1 <= next_deadline5) && (total_time < total_time_unit)) //if w1 has earliest deadline
+                { 
+                    new_execution_time = new_execution1;
+                    energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                    printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                    total_time += new_execution_time;
+                    new_execution1 = execution1;
+                    workload1 += deadline1; //cant start until after deadline
+                    next_deadline1 = deadline1; //next deadline
+                    total_energy += energy1;
+                }
+                else if (((workload2 > total_time) || (next_deadline1 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline1 <= next_deadline3)) && ((workload4 > total_time) || (next_deadline1 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline1 <= next_deadline5))) {
+                    if (((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline1) && (total_time < total_time_unit)) {
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload3 <= workload2) || (workload2 <= total_time)) &&((workload3 <= workload4) || (workload4 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline1) && (total_time < total_time_unit)) {//(  {
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload2) || (workload2 <= total_time))  && ((workload4 <= workload3) || (workload3 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline1) && (total_time < total_time_unit)) {//(((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 < next_deadline1)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if (((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline1) && (total_time < total_time_unit)) { //((workload5 > total_time) && (next_deadline5 < next_deadline1)) { //
+                        new_execution_time = workload5 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution1) {
+                        new_execution_time = new_execution1;
+                        energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                        printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution1 = execution1;
+                        workload1 += deadline1; //cant start until after deadline
+                        next_deadline1 = deadline1; //next deadline
+                        total_energy += energy1;
+                    }
+                    else {
+                        energy1 = new_execution_time * active_CPU_power1 * 0.001;
+                        printf("%d w1 %d %d %.3fJ\n", total_time, freq1, new_execution_time, energy1);
+                        total_time += new_execution_time;
+                        new_execution1 = new_execution1 - new_execution_time;
+                        total_energy += energy1;
+                    }
+                    
+                }
+                
+            }
+            if ((workload2 <= total_time) && (total_time < total_time_unit)) 
+            {
+                if (new_execution_time + total_time > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                        printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                        total_time += new_execution_time;
+                        total_energy += energy2;
+                }
+                else if ((next_deadline2 <= next_deadline1) && (next_deadline2 <= next_deadline3) && (next_deadline2 <= next_deadline4) && (next_deadline2 <= next_deadline5) && (total_time < total_time_unit)) 
+                {
+                    new_execution_time = new_execution2;
+                    energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                    printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                    total_time += new_execution_time;
+                    new_execution2 = execution2;
+                    workload2 += deadline2;
+                    next_deadline2 = deadline2;
+                    total_energy += energy2;
+                }
+                else if (((workload1 > total_time) || (next_deadline2 <= next_deadline1)) && ((workload3 > total_time) || (next_deadline2 <= next_deadline3)) && ((workload4 > total_time) || (next_deadline2 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline2 <= next_deadline5))) 
+                {
+                    if (((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline2) && (total_time < total_time_unit)) 
+                    {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload4) || (workload4 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline2) && (total_time < total_time_unit)) 
+                    {
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload3) || (workload3 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline2) && (total_time < total_time_unit)) 
+                    {
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if ( ((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline2) && (total_time < total_time_unit))
+                    {
+                        new_execution_time = workload5 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution2) 
+                    {
+                        new_execution_time = new_execution2;
+                        energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                        printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution2 = execution2;
+                        workload2 += deadline2;
+                        next_deadline2 = deadline2;
+                        total_energy += energy2;
+                    }
+                    else 
+                    {
+                        energy2 = new_execution_time * active_CPU_power2 * 0.001;
+                        printf("%d w2 %d %d %.3fJ\n", total_time, freq2, new_execution_time, energy2);
+                        total_time += new_execution_time;
+                        new_execution2 = new_execution2 - new_execution_time;
+                        total_energy += energy2;
+                    }
+                    
+                }
+            }
+            if ((workload3 <= total_time) && (total_time < total_time_unit)) 
+            {
+                 if (new_execution_time + total_time > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                        printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                        total_time += new_execution_time;
+                        total_energy += energy3;
+                }
+                else if ((next_deadline3 <= next_deadline1) && (next_deadline3 <= next_deadline2) && (next_deadline3 <= next_deadline4) && (next_deadline3 <= next_deadline5)) {
+                    new_execution_time = new_execution3;
+                    energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                    printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                    total_time += new_execution_time;
+                    new_execution3 = execution3;
+                    workload3 += deadline3;
+                    next_deadline3 = deadline3;
+                    total_energy += energy3;
+                }
+                else if (((workload1 > total_time) || (next_deadline3 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline3 <= next_deadline2)) && ((workload4 > total_time) || (next_deadline3 <= next_deadline4)) && ((workload5 > total_time) || (next_deadline3 <= next_deadline5))) {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline3)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline3)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload2) || (workload2 <= total_time)) && ((workload4 <= workload5) || (workload5 <= total_time)) && (workload4 > total_time) && (next_deadline4 <= next_deadline3)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    else if ( ((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload4) || (workload4 <= total_time)) && (workload5 > total_time) && (next_deadline5 <= next_deadline3)) {//
+                        new_execution_time = workload5 - total_time;
+                    }
+                    if (new_execution_time >= new_execution3) {
+                        new_execution_time = new_execution3;
+                        energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                        printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution3 = execution3;
+                        workload3 += deadline3;
+                        next_deadline3 = deadline3;
+                        total_energy += energy3;
+                    }
+                    else {
+                        energy3 = new_execution_time * active_CPU_power3 * 0.001;
+                        printf("%d w3 %d %d %.3fJ\n", total_time, freq3, new_execution_time, energy3);
+                    total_time += new_execution_time;
+                        new_execution3 = new_execution3 - new_execution_time;
+                        total_energy += energy3;
+                    }
+                    
+                    
+                }
+                
+            }
+            if ((workload4 <= total_time) && (total_time < total_time_unit)) 
+            {
+                /*if (new_execution_time + workload4 > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                        printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                        total_time += new_execution_time;
+                        total_energy += energy4;
+                }*/
+                if ((next_deadline4 <= next_deadline1) && (next_deadline4 <= next_deadline2) && (next_deadline4 <= next_deadline3) && (next_deadline4 <= next_deadline5)) {
+                    new_execution_time = new_execution4;
+                    energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                    printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                    total_time += new_execution_time;
+                    new_execution4 = execution4;
+                    workload4 += deadline4;
+                    next_deadline4 = deadline4;
+                    total_energy += energy4;
+                }
+                else if (((workload1 > total_time) || (next_deadline4 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline4 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline4 <= next_deadline3)) && ((workload5 > total_time) || (next_deadline4 <= next_deadline5))) {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload5) || (workload5 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline4)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload5) || (workload5 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline4)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if (((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload2) || (workload2 <= total_time)) && ((workload3 <= workload5) || (workload5 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline4)) {//
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload5 <= workload1) || (workload1 <= total_time)) && ((workload5 <= workload2) || (workload2 <= total_time)) && ((workload5 <= workload3) || (workload3 <= total_time)) &&  (workload5 > total_time) && (next_deadline5 <= next_deadline4)) {//
+                        new_execution_time = workload5 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution4) {
+                        new_execution_time = new_execution4;
+                        energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                        printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution4 = execution4;
+                    workload4 += deadline4;
+                        next_deadline4 = deadline4;
+                        total_energy += energy4;
+                    }
+                    else {
+                        energy4 = new_execution_time * active_CPU_power4 * 0.001;
+                        printf("%d w4 %d %d %.3fJ\n", total_time, freq4, new_execution_time, energy4);
+                        total_time += new_execution_time;
+                        new_execution4 = new_execution4 - new_execution_time;
+                        total_energy += energy4;
+                    }
+                    
+                }
+            }
+            if ((workload5 <= total_time) && (total_time < total_time_unit)) 
+            {
+                /*if (new_execution_time + workload5 > total_time_unit) {
+                        new_execution_time = total_time_unit - total_time;
+                        energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                        printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                        total_time += new_execution_time;
+                        total_energy += energy5;
+                }*/
+                if ((next_deadline5 < next_deadline1) && (next_deadline5 < next_deadline2) && (next_deadline5 < next_deadline4) && (next_deadline5 < next_deadline3))
+                {
+                    new_execution_time = new_execution5; 
+                    energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                    printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                    total_time += new_execution_time;
+                    new_execution5 = execution5;
+                    workload5 += deadline5;
+                    next_deadline5 = deadline5;
+                    total_energy += energy5;
+                }
+                else if (((workload1 > total_time) || (next_deadline5 <= next_deadline1)) && ((workload2 > total_time) || (next_deadline5 <= next_deadline2)) && ((workload3 > total_time) || (next_deadline5 <= next_deadline3)) && ((workload5 > total_time) || (next_deadline5 <= next_deadline4)))
+                {
+                    if (((workload1 <= workload2) || (workload2 <= total_time)) && ((workload1 <= workload3) || (workload3 <= total_time)) && ((workload1 <= workload4) || (workload4 <= total_time)) && (workload1 > total_time) && (next_deadline1 <= next_deadline5)) {
+                        new_execution_time = workload1 - total_time;
+                    }
+                    else if (((workload2 <= workload1) || (workload1 <= total_time)) && ((workload2 <= workload3) || (workload3 <= total_time)) && ((workload2 <= workload4) || (workload4 <= total_time)) && (workload2 > total_time) && (next_deadline2 <= next_deadline5)) {//
+                        new_execution_time = workload2 - total_time;
+                    }
+                    else if ( ((workload3 <= workload1) || (workload1 <= total_time)) && ((workload3 <= workload2) || (workload2 <= total_time)) &&((workload3 <= workload4) || (workload4 <= total_time)) && (workload3 > total_time) && (next_deadline3 <= next_deadline5)) {//
+                        new_execution_time = workload3 - total_time;
+                    }
+                    else if (((workload4 <= workload1) || (workload1 <= total_time)) && ((workload4 <= workload2) || (workload2 <= total_time)) && ((workload4 <= workload3) || (workload3 <= total_time)) &&  (workload4 > total_time) && (next_deadline4 <= next_deadline5)) {//
+                        new_execution_time = workload4 - total_time;
+                    }
+                    
+                    if (new_execution_time >= new_execution5)
+                    {
+                        new_execution_time = new_execution5;
+                        energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                        printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                        total_time += new_execution_time; //update total time with execution time
+                        new_execution5 = execution5;
+                        workload5 += deadline5;
+                        next_deadline5 = deadline5;
+                        total_energy += energy5;
+                    }
+                    else 
+                    {
+                        energy5 = new_execution_time * active_CPU_power5 * 0.001;
+                        printf("%d w5 %d %d %.3fJ\n", total_time, freq5, new_execution_time, energy5);
+                        total_time += new_execution_time;
+                        new_execution5 = new_execution5 - new_execution_time;
+                        total_energy += energy5;
+                    }
+                }
+            }
+
+            else if((workload1 > total_time) && (workload2 > total_time) && (workload3 > total_time) && (workload4 > total_time) && (total_time < total_time_unit))
+            {
+                if((workload1 <= workload2) && (workload1 <= workload3) && (workload1 <= workload4) && (workload1 <= workload5))
+                {
+                    new_execution_time = workload1 - total_time;
+                }
+                else if ((workload2 <= workload3) && (workload2 <= workload4) && (workload2 <= workload5))
+                {
+                    new_execution_time = workload2 - total_time;
+                }
+                else if ((workload3 <= workload4) && (workload3 <= workload5))
+                {
+                    new_execution_time = workload3 - total_time;
+                }
+                else if (workload4 <= workload5)
+                {
+                    new_execution_time = workload4 - total_time;
+                }
+                else 
+                {
+                    new_execution_time = workload5 - total_time;
+                }
+                if (new_execution_time + total_time > total_time_unit) {
+                    new_execution_time = total_time_unit - total_time;
+                    energy6 = new_execution_time * idle_power * 0.001;
+                    printf("%d IDLE %d %.3fJ\n", total_time, new_execution_time, energy6);
+                    total_time += new_execution_time;
+                    total_energy += energy6;
+                    total_IDLE += new_execution_time;
+                }
+                else {
+                energy6 = new_execution_time * idle_power * 0.001;
+                printf("%d IDLE %d %.3fJ\n", total_time, new_execution_time, energy6);
+                total_time += new_execution_time;
+                total_energy += energy6;
+                total_IDLE += new_execution_time;
+                }
+            }
+            
+            
+        }
+        total_IDLE = (total_IDLE / total_time) * 100.0;
+        printf("\nTotal Energy: %.3fJ\n", total_energy);
+        printf("Percentage of Time Spent IDLE: %f%%\n", total_IDLE);
+        printf("Total System Execution Time: %d\n", total_time);
+    }
+    }
+}
